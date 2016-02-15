@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <!-- Download URL -->
+	<EditText
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/downloadURL"
+		android:hint="URL"
+		android:text="http://www.noiseaddicts.com/samples_1w72b820/2558.mp3"/>
+
+	<!-- Song name -->
+	<EditText
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/songName"
+		android:hint="Song Name?"
+		android:text="Hitler Anthem"/>
+
+    <!-- Download Button -->
+    <Button android:id="@+id/btnProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download from URL"/>
+ 
+</LinearLayout>

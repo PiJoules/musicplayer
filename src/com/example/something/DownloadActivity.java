@@ -18,49 +18,65 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.view.WindowManager.LayoutParams;
+import android.widget.EditText;
 import android.media.MediaPlayer;
 
-public class MainActivity extends Activity{
+/**
+ * - Search for files in a specified directory where the audio files are located.
+ */
+
+
+public class DownloadActivity extends Activity{
+    // Textbox to enter url for download
+    private EditText downloadURL;
+
+    // Textbox to enter song name
+    private EditText songName;
+
     // button to show progress dialog
-    Button btnShowProgress;
+    private Button btnShowProgress;
 
     // Progress Dialog
     private ProgressDialog pDialog;
 
     // Progress dialog type (0 - for Horizontal progress bar)
-    public static final int progress_bar_type = 0; 
+    public static final int progress_bar_type = 0;
 
-    // File url to download
-    private static String file_url = "http://www.noiseaddicts.com/samples_1w72b820/2558.mp3";
-    private static String downloadpath = "/something.mp3";
-
-    public static String TAG = "TAG";
+    private String downloadPath(){
+        return Utils.rootDirName() + "/" + songName.getText().toString();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
 
-        // show progress bar button
+        // Make us non-modal, so that others can receive touch events.
+        getWindow().setFlags(LayoutParams.FLAG_NOT_TOUCH_MODAL, LayoutParams.FLAG_NOT_TOUCH_MODAL);
+        // ...but notify us that it happened.
+        getWindow().setFlags(LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
+
+        setContentView(R.layout.download);
+
+        // Initiliaze gui stuff
         btnShowProgress = (Button) findViewById(R.id.btnProgressBar);
+        downloadURL = (EditText) findViewById(R.id.downloadURL);
+        songName = (EditText) findViewById(R.id.songName);
 
         /**
          * Show Progress bar click event
-         * */
+         */
         btnShowProgress.setOnClickListener(new View.OnClickListener() {
- 
             @Override
             public void onClick(View v) {
                 // starting new Async Task
-                Log.v(TAG, "creaing downloadfilefromurl objec");
-                DownloadFileFromURL dffu = new DownloadFileFromURL();
-                Log.v(TAG, "executing");
-                dffu.execute(file_url);
-                Log.v(TAG, "done executing");
+                if (!downloadURL.getText().toString().trim().equals("")){
+                    if (!songName.getText().toString().trim().equals("")){
+                        new DownloadFileFromURL().execute(downloadURL.getText().toString());
+                    }
+                }
             }
         });
-
-        Log.v(TAG, "end onCreate MainActivity");
     }
 
     /**
@@ -69,24 +85,24 @@ public class MainActivity extends Activity{
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
-        case progress_bar_type:
-            pDialog = new ProgressDialog(this);
-            pDialog.setMessage("Downloading file. Please wait...");
-            pDialog.setIndeterminate(false);
-            pDialog.setMax(100);
-            pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            pDialog.setCancelable(true);
-            pDialog.show();
-            return pDialog;
-        default:
-            return null;
+            case progress_bar_type:
+                pDialog = new ProgressDialog(this);
+                pDialog.setMessage("Downloading file. Please wait...");
+                pDialog.setIndeterminate(false);
+                pDialog.setMax(100);
+                pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                pDialog.setCancelable(true);
+                pDialog.show();
+                return pDialog;
+            default:
+                return null;
         }
     }
 
     /**
      * Background Async Task to download file
      * */
-    class DownloadFileFromURL extends AsyncTask<String, String, String> {
+    private class DownloadFileFromURL extends AsyncTask<String, String, String> {
      
         /**
          * Before starting background thread
@@ -115,7 +131,7 @@ public class MainActivity extends Activity{
                 InputStream input = new BufferedInputStream(url.openStream(), 8192);
      
                 // Output stream to write file
-                OutputStream output = new FileOutputStream("/sdcard" + downloadpath);
+                OutputStream output = new FileOutputStream(downloadPath());
      
                 byte data[] = new byte[1024];
      
@@ -125,7 +141,7 @@ public class MainActivity extends Activity{
                     total += count;
                     // publishing the progress....
                     // After this onProgressUpdate will be called
-                    publishProgress(""+(int)((total*100)/lenghtOfFile));
+                    publishProgress("" + (int)((total * 100) / lenghtOfFile));
      
                     // writing data to file
                     output.write(data, 0, count);
@@ -138,7 +154,7 @@ public class MainActivity extends Activity{
                 output.close();
                 input.close();
      
-            } catch (Exception e) {
+            } catch(Exception e) {
                 Log.e("Error: ", e.getMessage());
             }
      
@@ -151,32 +167,25 @@ public class MainActivity extends Activity{
         protected void onProgressUpdate(String... progress) {
             // setting progress percentage
             pDialog.setProgress(Integer.parseInt(progress[0]));
-       }
+        }
      
         /**
          * After completing background task
          * Dismiss the progress dialog
          * **/
         @Override
-        protected void onPostExecute(String file_url) {
+        protected void onPostExecute(String result) {
             // dismiss the dialog after the file was downloaded
             dismissDialog(progress_bar_type);
-     
-            // Displaying downloaded image into image view
-            // Reading image path from sdcard
-            String imagePath = Environment.getExternalStorageDirectory().toString() + downloadpath;
-            // setting downloaded into image view
-            //my_image.setImageDrawable(Drawable.createFromPath(imagePath));
-            Log.v(TAG, imagePath);
 
-            MediaPlayer mp = new MediaPlayer();
-            try {
-                mp.setDataSource(imagePath);
-                mp.prepare();
-                mp.start();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }            
+            // MediaPlayer mp = new MediaPlayer();
+            // try {
+            //     mp.setDataSource(downloadPath());
+            //     mp.prepare();
+            //     mp.start();
+            // } catch (Exception e) {
+            //     e.printStackTrace();
+            // }            
         }
      
     }
