@@ -38,12 +38,82 @@ public class SongActivity extends Activity {
             mp.start();
             pausePlay.setText("Pause");
         } catch (Exception e) {
-            // e.printStackTrace();
+        	e.printStackTrace();
             Log.v("TAG", e.getMessage());
+            return;
         }
+        // Max will be song length.
+        progress.setMax(mp.getDuration());
+        progress.setProgress(0);
 
-        // Set button callbacks
+
+        // Set callbacks
         pausePlay.setOnClickListener(new MediaPlayerOnClickListener(mp));
+        progress.setOnSeekBarChangeListener(new MediaPlayerUpdate(mp));
+
+        // New thread to update the seekbar
+        new Thread(new SeekBarUpdateThread(mp, progress)).start();
+    }
+
+    /**
+     * Class for updating the mediaplayer based on the seekbar position.
+     */
+    private class MediaPlayerUpdate implements SeekBar.OnSeekBarChangeListener {
+    	private MediaPlayer mediaPlayer;
+
+    	public MediaPlayerUpdate(MediaPlayer mp){
+    		mediaPlayer = mp;
+    	}
+
+    	@Override
+    	public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){}
+
+    	/**
+    	 * Pause mediaplayer when touching seekbar.
+    	 */
+    	@Override
+    	public void onStartTrackingTouch(SeekBar seekBar){
+    		mediaPlayer.pause();
+    	}
+
+    	/**
+    	 * Update mediaplayer based on seekbar position.
+    	 */
+    	@Override
+    	public void onStopTrackingTouch(SeekBar seekBar){
+    		mediaPlayer.seekTo(seekBar.getProgress());
+    		mediaPlayer.start();
+    	}
+    }
+
+    /**
+     * Class for asynchronously updating the seekbar based on the mediaplayer.
+     */
+    private class SeekBarUpdateThread implements Runnable {
+    	private MediaPlayer mediaPlayer;
+    	private SeekBar progress;
+
+    	public SeekBarUpdateThread(MediaPlayer mp, SeekBar prg){
+    		super();
+    		mediaPlayer = mp;
+    		progress = prg;
+    	}
+
+    	/**
+    	 * Update seekbar based on time into mediaplayer.
+    	 */
+    	@Override
+    	public void run(){
+    		while (mp.getCurrentPosition() < mp.getDuration()){
+    			progress.setProgress(mp.getCurrentPosition());
+    			try {
+	    			Thread.sleep(1000);
+				} catch (Exception e){
+					e.printStackTrace();
+					Log.v("TAG", e.getMessage());
+				}
+    		}
+    	}
     }
 
     /**
@@ -62,6 +132,7 @@ public class SongActivity extends Activity {
     	private MediaPlayer mediaPlayer;
 
     	public MediaPlayerOnClickListener(MediaPlayer mp){
+    		super();
     		mediaPlayer = mp;
     	}
 
